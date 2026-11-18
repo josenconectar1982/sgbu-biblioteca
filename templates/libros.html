@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, cover %}
+{% block title %}Libros y ejemplares{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Catalogación · RF03 y RF04</div><h1>Libros y ejemplares</h1><p>{{ rows|length }} títulos registrados. Abre un título para gestionar sus ejemplares.</p></div>
+<button class="btn" onclick="document.getElementById('nuevo').toggleAttribute('hidden')">{{ icon('plus') }} Nuevo libro</button></div>
+<form method="post" id="nuevo" class="card" style="margin-bottom:18px" hidden>
+  <h2>{{ icon('book') }} Registrar libro</h2>
+  <div class="grid g3">
+    <div><label class="l">ISBN (10 o 13 dígitos)</label><input class="in" name="isbn" required placeholder="978-958-00-0000-0"></div>
+    <div style="grid-column:span 2"><label class="l">Título</label><input class="in" name="titulo" required></div>
+    <div><label class="l">Autor(es), separados por coma</label><input class="in" name="autores" required></div>
+    <div><label class="l">Editorial</label><input class="in" name="editorial"></div>
+    <div><label class="l">Categoría</label><select class="in" name="categoria">{% for c in cats %}<option value="{{c.id}}">{{c.nombre}}</option>{% endfor %}</select></div>
+    <div><label class="l">Año</label><input class="in" name="anio" type="number"></div>
+    <div><label class="l">Edición</label><input class="in" name="edicion"></div>
+    <div><label class="l">Palabras clave</label><input class="in" name="palabras"></div>
+  </div>
+  <div class="row end" style="margin-top:14px"><button class="btn">Guardar libro</button></div>
+</form>
+<div class="tw"><table class="t">
+  <tr><th></th><th>Título</th><th>Categoría</th><th>ISBN</th><th>Ejemplares</th><th>Disponibilidad</th></tr>
+  {% for r in rows %}
+  <tr>
+    <td style="width:56px">{{ cover(r.l, r.autores, 'xs') }}</td>
+    <td><a href="{{ url_for('libro', lid=r.l.id) }}"><b>{{ r.l.titulo }}</b></a><div class="small mut">{{ r.autores }} · {{ r.l.editorial }} {{ r.l.anio }}</div></td>
+    <td class="small">{{ r.l.categoria }}</td><td class="mono">{{ r.l.isbn }}</td>
+    <td>{{ r.d.disponibles }} / {{ r.d.total }}</td><td>{{ badge(r.d.estado[0], r.d.estado[1]) }}</td>
+  </tr>{% endfor %}
+</table></div>
+{% endblock %}

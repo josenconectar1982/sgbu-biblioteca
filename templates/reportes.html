@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge %}
+{% block title %}Reportes{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Reportes · RF16, RF17 y RF18</div><h1>Reportes de la colección</h1><p>Información estadística para la toma de decisiones de la biblioteca.</p></div>
+<a class="btn sec" href="{{ url_for('reportes', tipo=tipo, desde=desde, hasta=hasta, csv=1) }}">{{ icon('download') }} Exportar a Excel (CSV)</a></div>
+<div class="tabs">
+  <a class="{{ 'on' if tipo=='solicitados' }}" href="{{ url_for('reportes', tipo='solicitados', desde=desde, hasta=hasta) }}">{{ icon('chart',16) }} Más solicitados</a>
+  <a class="{{ 'on' if tipo=='vencidos' }}" href="{{ url_for('reportes', tipo='vencidos') }}">{{ icon('alert',16) }} Préstamos vencidos</a>
+  <a class="{{ 'on' if tipo=='adquisicion' }}" href="{{ url_for('reportes', tipo='adquisicion', desde=desde, hasta=hasta) }}">{{ icon('plus',16) }} Sugerencia de adquisición</a>
+</div>
+{% if tipo != 'vencidos' %}
+<form class="filters"><input type="hidden" name="tipo" value="{{ tipo }}">
+  <label class="small mut">Desde</label><input class="in" type="date" name="desde" value="{{ desde }}" style="min-width:160px">
+  <label class="small mut">Hasta</label><input class="in" type="date" name="hasta" value="{{ hasta }}" style="min-width:160px">
+  <button class="btn sec">Generar</button></form>
+{% endif %}
+
+{% if tipo == 'solicitados' %}
+<div class="grid g21">
+  <div class="card"><h2>{{ icon('chart') }} Préstamos por título</h2>
+    <div class="bars">{% for r in rows %}<div class="bar"><span class="lbl" title="{{ r.titulo }}">{{ r.titulo }}</span><div class="trk"><i style="width:{{ (r.prestamos / maxv * 100)|round }}%"></i></div><b>{{ r.prestamos }}</b></div>{% endfor %}</div>
+  </div>
+  <div class="card"><h2>{{ icon('books',18) }} Ranking</h2>
+    <div class="tw"><table class="t"><tr><th>#</th><th>Título</th><th>Prést.</th><th>Res.</th></tr>
+    {% for r in rows %}<tr><td><b>{{ loop.index }}</b></td><td class="small">{{ r.titulo }}<div class="mut">{{ r.categoria }}</div></td><td><b>{{ r.prestamos }}</b></td><td>{{ r.reservas }}</td></tr>{% endfor %}</table></div>
+  </div>
+</div>
+{% elif tipo == 'vencidos' %}
+<div class="tw"><table class="t">
+  <tr><th>Lector</th><th>Contacto</th><th>Ejemplar</th><th>Título</th><th>Venció</th><th>Días de retraso</th></tr>
+  {% for r in rows %}<tr><td><b>{{ r.lector }}</b><div class="small mut">{{ r.tipo|capitalize }}</div></td><td class="small">{{ r.correo }}<br>{{ r.telefono }}</td><td class="mono">{{ r.codigo }}</td><td class="small">{{ r.titulo }}</td><td class="small">{{ r.fecha_vencimiento|fecha }}</td><td>{{ badge(r.dias|string + ' días', 'red') }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">No hay préstamos vencidos. 🎉</td></tr>{% endfor %}
+</table></div>
+{% else %}
+<div class="alert a-info">{{ icon('check') }}<div>Criterios: cola de reservas ≥ 3, rotación mayor a 3 préstamos por ejemplar en el periodo, o ejemplares perdidos / dados de baja sin reposición.</div></div>
+<div class="tw"><table class="t">
+  <tr><th>Título</th><th>Ejemplares útiles</th><th>Cola</th><th>Rotación</th><th>Motivo</th><th>Sugeridos</th></tr>
+  {% for r in rows %}<tr><td><b>{{ r.titulo }}</b><div class="small mut mono">{{ r.isbn }}</div></td><td>{{ r.ejemplares }}</td><td>{{ r.cola }}</td><td>{{ r.rotacion }}</td><td class="small">{{ r.motivos }}</td><td>{{ badge('+' ~ r.sugeridos, 'blue') }}</td></tr>
+  {% else %}<tr><td colspan="6" class="empty">No hay títulos sugeridos para este periodo.</td></tr>{% endfor %}
+</table></div>
+{% endif %}
+{% endblock %}

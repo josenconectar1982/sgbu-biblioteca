@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Iniciar sesión{% endblock %}
+{% block shell %}
+<div class="login">
+  <section class="login-art">
+    <div class="row" style="gap:14px">
+      <div class="logo">{{ icon('books', 24) }}</div>
+      <div><div class="brand-t" style="color:#fff">SGBU</div><div class="brand-s">Sistema de Gestión de Biblioteca Universitaria</div></div>
+    </div>
+    <div class="shelf">
+      {% for h,c in [(120,'#E9C46A'),(96,'#7EA1DF'),(138,'#E7EDF7'),(110,'#C96E5A'),(84,'#E9C46A'),(130,'#5B83C7'),(100,'#9FB0CF'),(142,'#E9C46A'),(90,'#E7EDF7'),(118,'#7EA1DF'),(104,'#C96E5A'),(132,'#E9C46A'),(88,'#5B83C7'),(124,'#E7EDF7'),(96,'#E9C46A'),(140,'#7EA1DF')] %}
+      <span style="height:{{h}}px;background:{{c}}"></span>
+      {% endfor %}
+    </div>
+    <div class="shelf-base"></div>
+    <h1>Biblioteca Universitaria <em>Gustavo Francisco Petro Urrego</em></h1>
+    <p>Consulta la disponibilidad real de la colección, reserva libros prestados y recibe recordatorios antes de cada vencimiento.</p>
+    <div class="feats">
+      <div>{{ icon('search',16) }} Catálogo en línea</div>
+      <div>{{ icon('bookmark',16) }} Reservas en cola</div>
+      <div>{{ icon('bell',16) }} Recordatorios</div>
+      <div>{{ icon('history',16) }} Trazabilidad</div>
+    </div>
+  </section>
+  <section class="login-form">
+    <div class="login-box">
+      <div class="eyebrow">Bienvenido</div>
+      <h2>Iniciar sesión</h2>
+      <p class="mut" style="margin-top:0">Ingresa con tu correo institucional.</p>
+      {% with msgs = get_flashed_messages(with_categories=true) %}{% for cat, m in msgs %}
+        <div class="flash f-{{cat}}">{{ icon('check' if cat=='ok' else 'alert') }}<span>{{ m }}</span></div>
+      {% endfor %}{% endwith %}
+      <form method="post" id="flogin">
+        <div class="field"><label class="l">Correo institucional</label><input class="in" name="correo" id="correo" type="email" placeholder="usuario@uniajc.edu.co" required></div>
+        <div class="field"><label class="l">Contraseña</label><input class="in" name="clave" id="clave" type="password" placeholder="••••••••" required></div>
+        <div class="row" style="justify-content:space-between;margin:-2px 0 16px">
+          <label class="small row" style="gap:6px"><input type="checkbox"> Recordar usuario</label>
+          <a class="small" href="#" onclick="alert('Se enviará un enlace de un solo uso a su correo, válido por 30 minutos (RF01).');return false;">¿Olvidó su contraseña?</a>
+        </div>
+        <button class="btn lg" style="width:100%">Ingresar</button>
+      </form>
+      <div class="or">Acceso rápido para la demostración</div>
+      <div class="demo">
+        {% for tipo, nom, correo, clave, desc in demo %}
+        <button type="button" onclick="document.getElementById('correo').value='{{correo}}';document.getElementById('clave').value='{{clave}}';document.getElementById('flogin').submit();">
+          <div class="avatar" style="{{ 'background:linear-gradient(135deg,#E9C46A,#C99A2E);color:#16294D' if tipo in ('BIBLIOTECARIO','ADMINISTRADOR') }}">{{ nom.split()[0][0] }}{{ nom.split()[1][0] }}</div>
+          <div><b>{{ nom }}</b><span>{{ desc }}</span></div>
+          <span class="tag">{{ tipo|capitalize }}</span>
+        </button>
+        {% endfor %}
+      </div>
+      <p class="small mut" style="margin-top:18px">Al ingresar aceptas la política de tratamiento de datos personales (Ley 1581 de 2012).</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

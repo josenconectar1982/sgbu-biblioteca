@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, estado_badge %}
+{% block title %}Usuarios{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Gestión de usuarios · RF02</div><h1>Usuarios</h1><p>Lectores (estudiantes, docentes y administrativos) y personal de la biblioteca.</p></div>
+<button class="btn" onclick="document.getElementById('nuevo').toggleAttribute('hidden')">{{ icon('plus') }} Nuevo usuario</button></div>
+<form method="post" id="nuevo" class="card" style="margin-bottom:18px" hidden>
+  <h2>{{ icon('user') }} Registrar usuario</h2>
+  <div class="grid g3">
+    <div><label class="l">Tipo</label><select class="in" name="tipo">{% for t in ['ESTUDIANTE','DOCENTE','ADMINISTRATIVO','BIBLIOTECARIO'] + (['ADMINISTRADOR'] if es_admin else []) %}<option>{{t}}</option>{% endfor %}</select></div>
+    <div><label class="l">Documento</label><input class="in" name="documento" required></div>
+    <div><label class="l">Código / carné</label><input class="in" name="codigo"></div>
+    <div><label class="l">Nombres</label><input class="in" name="nombres" required></div>
+    <div><label class="l">Apellidos</label><input class="in" name="apellidos" required></div>
+    <div><label class="l">Correo institucional</label><input class="in" name="correo" type="email" placeholder="nombre@uniajc.edu.co" required></div>
+    <div><label class="l">Teléfono</label><input class="in" name="telefono"></div>
+    <div><label class="l">Programa / dependencia</label><input class="in" name="programa"></div>
+    <div style="align-self:end"><button class="btn" style="width:100%">Guardar</button></div>
+  </div>
+</form>
+<form class="filters"><input class="in" name="q" value="{{ q }}" placeholder="Nombre, correo, documento o carné">
+  <select class="in" name="tipo"><option value="">Todos los tipos</option>{% for t in ['ESTUDIANTE','DOCENTE','ADMINISTRATIVO','BIBLIOTECARIO','ADMINISTRADOR'] %}<option {{ 'selected' if tipo==t }}>{{t}}</option>{% endfor %}</select>
+  <button class="btn sec">{{ icon('search') }} Filtrar</button><span class="mut small">{{ rows|length }} usuarios</span></form>
+<div class="tw"><table class="t">
+  <tr><th>Usuario</th><th>Tipo</th><th>Carné</th><th>Programa / dependencia</th><th>Situación</th><th>Estado</th><th></th></tr>
+  {% for r in rows %}{% set u = r.u %}
+  <tr>
+    <td><div class="row" style="gap:10px;flex-wrap:nowrap"><div class="avatar" style="width:34px;height:34px;font-size:12px">{{ u.nombres[0] }}{{ u.apellidos[0] }}</div><div><b>{{ u.nombres }} {{ u.apellidos }}</b><div class="small mut">{{ u.correo }}</div></div></div></td>
+    <td>{{ badge(u.tipo|capitalize, 'blue' if u.tipo in ('BIBLIOTECARIO','ADMINISTRADOR') else 'gray') }}</td>
+    <td class="mono">{{ u.codigo }}</td><td class="small">{{ u.programa }}</td>
+    <td class="small">{% if r.st %}{{ r.st.activos }} préstamo(s){% if r.st.vencidos %} · <span style="color:#C2362B">{{ r.st.vencidos }} vencido(s)</span>{% endif %}{% if r.st.sancion %} · <span style="color:#C2362B">sancionado</span>{% endif %}{% else %}—{% endif %}</td>
+    <td>{{ estado_badge(u.estado) }}</td>
+    <td>{% if u.id != usuario.id %}<form method="post"><input type="hidden" name="accion" value="estado"><input type="hidden" name="id" value="{{ u.id }}"><button class="btn sm {{ 'danger' if u.estado=='ACTIVO' else 'sec' }}">{{ 'Inactivar' if u.estado=='ACTIVO' else 'Activar' }}</button></form>{% endif %}</td>
+  </tr>{% endfor %}
+</table></div>
+{% endblock %}

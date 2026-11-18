@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge %}
+{% block title %}Auditoría{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Bitácora de auditoría · RF20</div><h1>Auditoría</h1><p>Registro inalterable de las operaciones: usuario, fecha y hora, acción, entidad, detalle e IP.</p></div></div>
+<form class="filters"><input class="in" name="q" value="{{ q }}" placeholder="Buscar en el detalle o correo">
+  <select class="in" name="accion"><option value="">Todas las acciones</option>{% for a in acciones %}<option {{ 'selected' if acc==a }}>{{ a }}</option>{% endfor %}</select>
+  <button class="btn sec">{{ icon('search') }} Filtrar</button></form>
+<div class="tw"><table class="t">
+  <tr><th>Fecha y hora</th><th>Usuario</th><th>Acción</th><th>Entidad</th><th>Detalle</th><th>IP</th></tr>
+  {% for a in rows %}<tr><td class="small">{{ a.fecha|fecha }}</td><td class="small">{{ a.correo or 'Sistema' }}</td>
+    <td>{{ badge(a.accion|replace('_',' ')|capitalize, 'red' if a.accion in ('ACCESO_FALLIDO','ANULAR_SANCION') else ('violet' if a.accion in ('CONFIGURAR','IMPORTAR') else 'blue')) }}</td>
+    <td class="small">{{ a.entidad }}</td><td class="small">{{ a.detalle }}</td><td class="mono small">{{ a.ip }}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

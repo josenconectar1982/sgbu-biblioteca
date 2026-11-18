@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, estado_badge %}
+{% block title %}Trazabilidad{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Trazabilidad · RF15</div><h1>¿Quién tiene este ejemplar?</h1><p>Consulta el historial completo de un ejemplar o de un lector.</p></div></div>
+<form class="card scan" style="margin-bottom:18px"><input class="in big" name="q" value="{{ q }}" placeholder="Código de ejemplar (BUGP-001-01) o carné del lector" data-autofocus><button class="btn lg">{{ icon('search') }} Consultar</button></form>
+{% if ej %}
+<div class="grid g12" style="margin-bottom:18px">
+  <div class="card"><h2>{{ icon('book') }} Ejemplar</h2>
+    <dl class="kv"><dt>Código</dt><dd class="mono">{{ ej.codigo }}</dd><dt>Título</dt><dd>{{ ej.titulo }}</dd><dt>Ubicación</dt><dd>{{ ej.ubicacion }}</dd>
+    <dt>Circulación</dt><dd>{{ estado_badge(ej.circulacion) }}</dd><dt>Estado</dt><dd>{{ estado_badge(ej.estado) }}</dd></dl></div>
+  <div class="card"><h2>{{ icon('user') }} Lo tiene actualmente</h2>
+    {% if actual %}<div class="lectorcard {{ 'bad' if actual.estado=='VENCIDO' else 'ok' }}"><div class="avatar">{{ actual.lector[0] }}</div><div><b>{{ actual.lector }}</b> · carné {{ actual.carne }}
+      <div class="small">Prestado el {{ actual.fecha_prestamo|fecha }} por {{ actual.bib }} · vence {{ actual.fecha_vencimiento|fecha }}</div></div><span class="sp"></span>{{ estado_badge(actual.estado) }}</div>
+    {% else %}<div class="empty">El ejemplar no está prestado en este momento.</div>{% endif %}</div>
+</div>
+{% elif lec %}
+<div class="card" style="margin-bottom:18px"><div class="lectorcard ok"><div class="avatar">{{ lec.nombres[0] }}{{ lec.apellidos[0] }}</div><div><b>{{ lec.nombres }} {{ lec.apellidos }}</b><div class="small mut">{{ lec.tipo|capitalize }} · {{ lec.codigo }} · {{ lec.correo }}</div></div></div></div>
+{% endif %}
+{% if movs %}
+<div class="card"><h2>{{ icon('history') }} Historial de movimientos ({{ movs|length }})</h2>
+<div class="tw"><table class="t">
+  <tr><th>Préstamo</th>{% if ej %}<th>Lector</th>{% else %}<th>Ejemplar</th><th>Título</th>{% endif %}<th>Prestado</th><th>Vencimiento</th><th>Devuelto</th><th>Registró / recibió</th><th>Estado</th></tr>
+  {% for m in movs %}<tr><td class="mono">P-{{ m.id }}</td>{% if ej %}<td>{{ m.lector }}</td>{% else %}<td class="mono">{{ m.codigo }}</td><td class="small">{{ m.titulo }}</td>{% endif %}
+    <td class="small">{{ m.fecha_prestamo|fecha }}</td><td class="small">{{ m.fecha_vencimiento|fecha }}</td><td class="small">{{ m.fecha_devolucion|fecha }}</td>
+    <td class="small">{{ m.bib or '—' }} / {{ m.rec or '—' }}</td><td>{{ estado_badge(m.estado) }}</td></tr>{% endfor %}
+</table></div></div>
+{% elif q and (ej or lec) %}<div class="card empty">Sin movimientos registrados.</div>{% endif %}
+{% endblock %}

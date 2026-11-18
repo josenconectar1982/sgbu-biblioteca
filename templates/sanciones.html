@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, estado_badge %}
+{% block title %}Sanciones{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Sanciones automáticas · RF11 y RF12</div><h1>Sanciones</h1>
+<p>Se generan solas al registrar una devolución tardía: 1 día por cada día de retraso (o por hora en ejemplares restringidos).</p></div></div>
+<div class="chips" style="margin-bottom:16px">
+  {% for e,t in [('ACTIVA','Activas'),('CUMPLIDA','Cumplidas'),('ANULADA','Anuladas'),('','Todas')] %}<a class="chip {{ 'on' if est==e }}" href="{{ url_for('sanciones', estado=e) }}">{{ t }}</a>{% endfor %}
+</div>
+<div class="tw"><table class="t">
+  <tr><th>Lector</th><th>Motivo</th><th>Periodo</th><th>Días</th><th>Estado</th>{% if es_admin %}<th>Anular (solo administrador)</th>{% endif %}</tr>
+  {% for s in rows %}
+  <tr><td><b>{{ s.lector }}</b><div class="small mut">{{ s.tipo|capitalize }} · {{ s.correo }}</div></td><td class="small">{{ s.motivo }}{% if s.justificacion %}<div class="mut">Anulada: {{ s.justificacion }}</div>{% endif %}</td>
+    <td class="small">{{ s.fecha_inicio|dia }} – {{ s.fecha_fin|dia }}</td><td><b>{{ s.dias }}</b></td><td>{{ estado_badge(s.estado) }}</td>
+    {% if es_admin %}<td>{% if s.estado=='ACTIVA' %}<form method="post" class="row" style="flex-wrap:nowrap;gap:6px"><input type="hidden" name="id" value="{{ s.id }}">
+      <input class="in" name="justificacion" placeholder="Justificación obligatoria" style="height:32px;min-width:190px"><button class="btn sm danger">Anular</button></form>{% endif %}</td>{% endif %}
+  </tr>
+  {% else %}<tr><td colspan="6" class="empty">No hay sanciones en este estado.</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

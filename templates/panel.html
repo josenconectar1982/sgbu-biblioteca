@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, estado_badge %}
+{% block title %}Panel{% endblock %}
+{% block content %}
+<div class="ph">
+  <div><div class="eyebrow">{{ ahora.strftime('%d/%m/%Y · %I:%M %p') }}</div><h1>{{ 'Buenos días' if ahora.hour < 12 else ('Buenas tardes' if ahora.hour < 19 else 'Buenas noches') }}, {{ usuario.nombres }}</h1><p>Resumen de la circulación de la biblioteca en tiempo real.</p></div>
+  <div class="row"><a class="btn sec" href="{{ url_for('mostrador', tab='devolucion') }}">{{ icon('swap') }} Devolución</a><a class="btn" href="{{ url_for('mostrador') }}">{{ icon('scan') }} Nuevo préstamo</a></div>
+</div>
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="card kpi"><div class="lab">Ejemplares prestados</div><div class="val">{{ kpi.prestados }}</div><div class="sub">de {{ kpi.ejemplares }} ejemplares · {{ kpi.libros }} títulos</div><div class="ico t-blue">{{ icon('book') }}</div></div>
+  <div class="card kpi"><div class="lab">Préstamos vencidos</div><div class="val" style="color:#C2362B">{{ kpi.vencidos }}</div><div class="sub"><a href="{{ url_for('reportes', tipo='vencidos') }}">Ver reporte →</a></div><div class="ico t-red">{{ icon('alert') }}</div></div>
+  <div class="card kpi"><div class="lab">Reservas activas</div><div class="val">{{ kpi.reservas }}</div><div class="sub">Pendientes y disponibles</div><div class="ico t-amber">{{ icon('bookmark') }}</div></div>
+  <div class="card kpi"><div class="lab">Sanciones vigentes</div><div class="val">{{ kpi.sanciones }}</div><div class="sub">{{ kpi.lectores }} lectores registrados</div><div class="ico t-violet">{{ icon('gavel') }}</div></div>
+</div>
+<div class="grid g21" style="margin-bottom:18px">
+  <div class="card">
+    <h2>{{ icon('chart') }} Préstamos por semana</h2>
+    {% set mx = (semanas|map(attribute=1)|max) or 1 %}
+    <div class="cols">
+      {% for s, n in semanas %}<div><b>{{ n }}</b><i style="height:{{ (n / mx * 120)|round + 4 }}px"></i><span>{{ s }}</span></div>{% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2>{{ icon('layers', 18) }} Estado de los ejemplares</h2>
+    {% set colores = {'DISPONIBLE':'#1E8E5A','PRESTADO':'#C2362B','RESERVADO':'#E9C46A','EN_REPARACION':'#6B4FBB','PERDIDO':'#98A2B3','DADO_DE_BAJA':'#D0D5DD'} %}
+    {% set total = estados|sum(attribute='n') %}
+    <div class="row" style="gap:22px;flex-wrap:nowrap">
+      <svg viewBox="0 0 42 42" width="140" height="140" style="flex:none">
+        {% set ns = namespace(acc=0) %}
+        <circle cx="21" cy="21" r="15.9" fill="none" stroke="#EEF2F8" stroke-width="6"/>
+        {% for e in estados %}{% set pct = e.n / total * 100 %}
+        <circle cx="21" cy="21" r="15.9" fill="none" stroke="{{ colores.get(e.estado,'#999') }}" stroke-width="6" stroke-dasharray="{{ pct }} {{ 100 - pct }}" stroke-dashoffset="{{ 25 - ns.acc }}"/>
+        {% set ns.acc = ns.acc + pct %}{% endfor %}
+        <text x="21" y="21" text-anchor="middle" font-size="7" font-weight="800" fill="#1B2433">{{ total }}</text>
+        <text x="21" y="27" text-anchor="middle" font-size="3.2" fill="#667085">ejemplares</text>
+      </svg>
+      <div class="legend">{% for e in estados %}<div><i style="background:{{ colores.get(e.estado,'#999') }}"></i>{{ e.estado|replace('_',' ')|capitalize }} <b style="margin-left:auto;padding-left:10px">{{ e.n }}</b></div>{% endfor %}</div>
+    </div>
+  </div>
+</div>
+<div class="grid g2">
+  <div class="card">
+    <h2>{{ icon('clock') }} Próximos vencimientos</h2>
+    <div class="tw"><table class="t"><tr><th>Lector</th><th>Libro</th><th>Vence</th><th></th></tr>
+    {% for v in vencen %}<tr><td>{{ v.lector }}</td><td class="small">{{ v.titulo[:34] }}{{ '…' if v.titulo|length > 34 }}</td><td class="small">{{ v.fecha_vencimiento|fecha }}</td><td>{{ estado_badge(v.estado) }}</td></tr>{% endfor %}
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>{{ icon('shield') }} Actividad reciente</h2>
+    <div class="timeline">
+      {% for a in actividad %}
+      <div class="tl"><div class="dot t-blue">{{ icon('history',16) }}</div><div><b>{{ a.accion|replace('_',' ')|capitalize }}</b> · {{ a.detalle }}<div class="small mut">{{ a.quien or 'Sistema' }} · {{ a.fecha|fecha }}</div></div></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

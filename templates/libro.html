@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, cover, estado_badge %}
+{% block title %}{{ l.titulo }}{% endblock %}
+{% block content %}
+<a href="{{ url_for('catalogo') }}" class="small">← Volver al catálogo</a>
+<div class="ficha" style="margin-top:14px">
+  <div>{{ cover(l, autores, 'lg') }}</div>
+  <div>
+    <div class="eyebrow">{{ l.categoria }}</div>
+    <h1>{{ l.titulo }}</h1>
+    <div class="metas">
+      <span>Autor: <b>{{ autores }}</b></span><span>Editorial: <b>{{ l.editorial }}</b></span>
+      <span>Edición: <b>{{ l.edicion }} ({{ l.anio }})</b></span><span>ISBN: <b class="mono">{{ l.isbn }}</b></span><span>Idioma: <b>{{ l.idioma }}</b></span>
+    </div>
+    <div class="dispbox">
+      <div class="big" style="color:{{ '#1E8E5A' if d.disponibles else '#C2362B' }}">{{ d.disponibles }}<span class="mut" style="font-size:16px;font-weight:600"> de {{ d.total }}</span></div>
+      <div><b>ejemplares disponibles</b><div class="small mut">{% if cola %}{{ cola }} lector(es) en cola de reserva{% else %}Sin cola de reservas{% endif %}</div></div>
+      <span class="sp"></span>
+      {% if es_lector %}
+        {% if mia %}
+          {{ badge('Tu reserva: ' + mia.estado|capitalize, 'amber') }}
+        {% elif puede_reservar %}
+          <form method="post"><button class="btn gold">{{ icon('bookmark') }} Reservar este libro</button></form>
+        {% elif d.disponibles %}
+          <span class="small mut">{{ icon('pin',15) }} Acércate al mostrador de circulación para el préstamo.</span>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% if es_lector and puede_reservar and not mia %}
+      <div class="alert a-info">{{ icon('bell') }}<div>Todos los ejemplares están prestados. Si reservas quedarás en la posición <b>{{ cola + 1 }}</b> y te avisaremos por correo cuando el ejemplar esté disponible (se guarda a tu nombre 48 horas hábiles).</div></div>
+    {% endif %}
+    <h2 style="margin:22px 0 10px">Ejemplares</h2>
+    <div class="tw"><table class="t">
+      <tr><th>Código</th><th>Ubicación</th><th>Circulación</th><th>Estado</th><th>Devolución prevista</th>{% if es_personal %}<th></th>{% endif %}</tr>
+      {% for x in filas %}
+      <tr>
+        <td class="mono">{{ x.e.codigo }}</td><td>{{ x.e.ubicacion }}</td><td>{{ estado_badge(x.e.circulacion) }}</td>
+        <td>{{ estado_badge(x.e.estado) }}{% if x.e.observacion %} <span class="small mut">{{ x.e.observacion }}</span>{% endif %}</td>
+        <td>{{ x.vence|fecha if x.vence else '—' }}</td>
+        {% if es_personal %}<td>
+          {% if x.e.estado not in ('PRESTADO','RESERVADO') %}
+          <form method="post" action="{{ url_for('libros') }}" class="row" style="gap:6px;flex-wrap:nowrap">
+            <input type="hidden" name="accion" value="estado_ejemplar"><input type="hidden" name="id" value="{{ x.e.id }}">
+            <select name="estado" class="in" style="height:32px;width:150px;font-size:12.5px">
+              {% for s in ['DISPONIBLE','EN_REPARACION','PERDIDO','DADO_DE_BAJA'] %}<option {{ 'selected' if s==x.e.estado }}>{{ s }}</option>{% endfor %}
+            </select><button class="btn sm sec">Cambiar</button>
+          </form>{% else %}<a class="small" href="{{ url_for('trazabilidad', q=x.e.codigo) }}">Ver trazabilidad →</a>{% endif %}
+        </td>{% endif %}
+      </tr>
+      {% endfor %}
+    </table></div>
+    {% if es_personal %}
+    <form method="post" action="{{ url_for('libros') }}" class="card" style="margin-top:18px">
+      <h2>{{ icon('plus') }} Agregar ejemplar</h2>
+      <input type="hidden" name="accion" value="ejemplar"><input type="hidden" name="libro_id" value="{{ l.id }}">
+      <div class="row">
+        <input class="in" name="ubicacion" placeholder="Ubicación (ej. Estante 4B)" style="max-width:240px">
+        <select class="in" name="circulacion" style="max-width:200px"><option>GENERAL</option><option>RESTRINGIDO</option><option>SOLO_SALA</option></select>
+        <button class="btn">Registrar ejemplar</button>
+        <span class="small mut">El código de barras se genera automáticamente.</span>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, estado_badge %}
+{% block title %}Mi cuenta{% endblock %}
+{% block content %}
+<div class="ph">
+  <div><div class="eyebrow">Estado de cuenta · RF14</div><h1>Hola, {{ usuario.nombres }}</h1>
+  <p>{{ usuario.tipo|capitalize }} · {{ usuario.programa }} · Carné {{ usuario.codigo }}</p></div>
+  <a class="btn sec" href="{{ url_for('catalogo') }}">{{ icon('search') }} Buscar libros</a>
+</div>
+{% if not st.habilitado %}
+<div class="alert a-err">{{ icon('alert') }}<div><b>No puedes realizar préstamos, renovaciones ni reservas.</b><br>{{ st.motivos|join(' ') }}</div></div>
+{% endif %}
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="card kpi"><div class="lab">Préstamos activos</div><div class="val">{{ st.activos }}<span class="mut" style="font-size:16px"> / {{ st.politica.max_ejemplares }}</span></div><div class="meter"><i style="width:{{ (st.activos / st.politica.max_ejemplares * 100)|round }}%"></i></div><div class="ico t-blue">{{ icon('book') }}</div></div>
+  <div class="card kpi"><div class="lab">Reservas activas</div><div class="val">{{ st.reservas }}<span class="mut" style="font-size:16px"> / {{ st.politica.max_reservas }}</span></div><div class="sub">Cola por orden de llegada</div><div class="ico t-amber">{{ icon('bookmark') }}</div></div>
+  <div class="card kpi"><div class="lab">Sanción vigente</div><div class="val" style="color:{{ '#C2362B' if st.sancion else '#1E8E5A' }}">{{ 'Sí' if st.sancion else 'No' }}</div><div class="sub">{% if st.sancion %}Hasta el {{ st.sancion.fecha_fin|dia }}{% else %}Estás al día{% endif %}</div><div class="ico {{ 't-red' if st.sancion else 't-green' }}">{{ icon('gavel') }}</div></div>
+  <div class="card kpi"><div class="lab">Préstamos vencidos</div><div class="val" style="color:{{ '#C2362B' if st.vencidos else '#1E8E5A' }}">{{ st.vencidos }}</div><div class="sub">Plazo: {{ st.politica.dias_prestamo }} días · {{ st.politica.max_renovaciones }} renovación(es)</div><div class="ico t-violet">{{ icon('clock') }}</div></div>
+</div>
+<div class="card" style="margin-bottom:18px">
+  <h2>{{ icon('book') }} Mis préstamos</h2>
+  {% if prestamos %}
+  <div class="tw"><table class="t">
+    <tr><th>Libro</th><th>Ejemplar</th><th>Vence</th><th>Renovaciones</th><th>Estado</th><th></th></tr>
+    {% for pr in prestamos %}
+    <tr>
+      <td><a href="{{ url_for('libro', lid=pr.libro_id) }}"><b>{{ pr.titulo }}</b></a></td>
+      <td class="mono">{{ pr.codigo }}</td>
+      <td>{{ pr.fecha_vencimiento|fecha }}</td>
+      <td>{{ pr.renovaciones }} de {{ st.politica.max_renovaciones }}</td>
+      <td>{% if pr.estado=='VENCIDO' %}{{ estado_badge('VENCIDO') }}{% elif por_vencer[pr.id] %}{{ badge('Por vencer','amber') }}{% else %}{{ estado_badge('ACTIVO') }}{% endif %}</td>
+      <td style="text-align:right">
+        <form method="post" action="{{ url_for('renovar', pid=pr.id) }}"><button class="btn sm {{ 'sec' if pr.estado=='VENCIDO' or pr.renovaciones >= st.politica.max_renovaciones }}">{{ icon('refresh',15) }} Renovar</button></form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table></div>
+  {% else %}<div class="empty">No tienes préstamos activos.</div>{% endif %}
+</div>
+<div class="grid g2">
+  <div class="card">
+    <h2>{{ icon('bookmark') }} Mis reservas</h2>
+    {% for x in reservas %}
+    <div class="tl">
+      <div class="dot {{ 't-green' if x.r.estado=='DISPONIBLE' else 't-amber' }}">{{ icon('bookmark',16) }}</div>
+      <div style="flex:1"><b>{{ x.r.titulo }}</b><div class="small mut">
+        {% if x.r.estado=='DISPONIBLE' %}¡Disponible! Retíralo antes del {{ x.r.fecha_expiracion|fecha }}{% else %}Posición {{ x.pos }} en la cola · reservado el {{ x.r.fecha|fecha }}{% endif %}</div></div>
+      {{ estado_badge(x.r.estado) }}
+      <form method="post" action="{{ url_for('cancelar_reserva', rid=x.r.id) }}" data-confirm="¿Cancelar esta reserva?"><button class="btn sm danger">Cancelar</button></form>
+    </div>
+    {% else %}<div class="empty">No tienes reservas. Puedes reservar libros que estén prestados desde su ficha.</div>{% endfor %}
+  </div>
+  <div class="card">
+    <h2>{{ icon('gavel') }} Sanciones</h2>
+    {% for s in sanciones[:5] %}
+    <div class="tl"><div class="dot {{ 't-red' if s.estado=='ACTIVA' else 't-blue' }}">{{ icon('gavel',16) }}</div>
+      <div style="flex:1"><b>{{ s.dias }} día(s)</b> · {{ s.fecha_inicio|dia }} – {{ s.fecha_fin|dia }}<div class="small mut">{{ s.motivo }}</div></div>{{ estado_badge(s.estado) }}</div>
+    {% else %}<div class="empty">Sin sanciones. ¡Sigue así!</div>{% endfor %}
+  </div>
+</div>
+<div class="card" style="margin-top:18px">
+  <h2>{{ icon('history') }} Historial reciente</h2>
+  {% if historial %}
+  <div class="tw"><table class="t"><tr><th>Libro</th><th>Ejemplar</th><th>Préstamo</th><th>Devolución</th></tr>
+  {% for h in historial %}<tr><td>{{ h.titulo }}</td><td class="mono">{{ h.codigo }}</td><td>{{ h.fecha_prestamo|fecha }}</td><td>{{ h.fecha_devolucion|fecha }}</td></tr>{% endfor %}
+  </table></div>{% else %}<div class="empty">Aún no tienes préstamos devueltos.</div>{% endif %}
+</div>
+{% endblock %}

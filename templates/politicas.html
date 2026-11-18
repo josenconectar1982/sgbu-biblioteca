@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon %}
+{% block title %}Políticas{% endblock %}
+{% block content %}
+{% set nombres = {'max_ejemplares':'Máximo de ejemplares','dias_prestamo':'Días de préstamo (GENERAL)','max_renovaciones':'Renovaciones permitidas','max_reservas':'Máximo de reservas activas','dias_sancion_por_dia':'Días de sanción por día de retraso','dias_aviso':'Días de aviso previo'} %}
+<div class="ph"><div><div class="eyebrow">Configuración · RF19</div><h1>Políticas de préstamo y sanción</h1><p>Los cambios aplican a los préstamos nuevos; los activos conservan sus condiciones.</p></div></div>
+<form method="post" class="card" style="margin-bottom:18px">
+  <div class="tw"><table class="t">
+    <tr><th>Parámetro</th><th>Estudiante</th><th>Docente</th><th>Administrativo</th></tr>
+    {% for c in campos %}<tr><td><b>{{ nombres[c] }}</b></td>
+      {% for t in ['ESTUDIANTE','DOCENTE','ADMINISTRATIVO'] %}<td><input class="in" type="number" min="0" max="60" name="{{t}}_{{c}}" value="{{ pols[t][c] }}" style="max-width:110px"></td>{% endfor %}</tr>{% endfor %}
+  </table></div>
+  <div class="row" style="margin-top:16px"><span class="small mut">{{ icon('clock',15) }} Ejemplares RESTRINGIDOS: préstamo de lunes a sábado desde las 4:00 p. m., devolución antes de las 10:00 a. m. del siguiente día hábil; cada hora de retraso = 1 día de sanción.</span><span class="sp"></span><button class="btn">{{ icon('check') }} Guardar cambios</button></div>
+</form>
+<div class="grid g2">
+  <div class="card"><h2>{{ icon('calendar') }} Calendario de días no hábiles</h2>
+    <p class="small mut">La biblioteca atiende de lunes a sábado. Si un vencimiento cae en domingo o festivo, se traslada al siguiente día hábil.</p>
+    <div class="chips">{% for x in fest %}<span class="chip" title="{{ x.nombre }}">{{ x.fecha|dia }} · {{ x.nombre }}</span>{% endfor %}</div></div>
+  <div class="card"><h2>{{ icon('refresh') }} Demostración</h2>
+    <p class="small mut">Restablece todos los datos de ejemplo (útil antes de la sustentación).</p>
+    <form method="post" action="{{ url_for('reiniciar_demo') }}" data-confirm="¿Restablecer todos los datos de demostración?"><button class="btn danger">{{ icon('refresh') }} Restablecer datos de demostración</button></form></div>
+</div>
+{% endblock %}

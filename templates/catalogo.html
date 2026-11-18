@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge, cover %}
+{% block title %}Catálogo{% endblock %}
+{% block content %}
+<div class="hero">
+  <div class="eyebrow" style="color:var(--gold)">Catálogo en línea · RF05</div>
+  <h1>¿Qué quieres leer hoy?</h1>
+  <p>Busca entre {{ libros|length if not q and not cat else 'los' }} títulos de la colección y consulta en tiempo real cuántos ejemplares hay disponibles.</p>
+  <form>
+    <input class="in" name="q" value="{{ q }}" placeholder="Título, autor, ISBN o palabra clave" autofocus>
+    <select class="in" name="cat" style="max-width:230px">
+      <option value="">Todas las categorías</option>
+      {% for c in cats %}<option value="{{c.id}}" {{ 'selected' if cat==c.id|string }}>{{ c.nombre }}</option>{% endfor %}
+    </select>
+    <button class="btn gold lg">{{ icon('search') }} Buscar</button>
+  </form>
+  <div class="hero-deco">{% for h in [46,70,58,84,52,76,64] %}<span style="height:{{h}}px"></span>{% endfor %}</div>
+</div>
+<div class="filters">
+  <b>{{ libros|length }} resultado{{ 's' if libros|length != 1 }}</b>{% if q %}<span class="mut">para «{{ q }}»</span>{% endif %}
+  <span class="sp"></span>
+  <a class="chip {{ 'on' if not solo }}" href="{{ url_for('catalogo', q=q, cat=cat) }}">Todos</a>
+  <a class="chip {{ 'on' if solo }}" href="{{ url_for('catalogo', q=q, cat=cat, disp=1) }}">Solo disponibles</a>
+</div>
+{% if libros %}
+<div class="books">
+  {% for x in libros %}
+  <a class="bk" href="{{ url_for('libro', lid=x.l.id) }}">
+    {{ cover(x.l, x.autores) }}
+    <div>
+      <div class="bk-t">{{ x.l.titulo }}</div>
+      <div class="bk-a">{{ x.autores }} · {{ x.l.anio }}</div>
+    </div>
+    <div class="bk-f">
+      {{ badge(x.d.estado[0], x.d.estado[1]) }}
+      <span>{{ x.d.disponibles }}/{{ x.d.total }}{% if x.cola %} · {{ x.cola }} en cola{% endif %}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card empty">{{ icon('search', 30) }}<p>No encontramos libros con esos criterios.</p></div>
+{% endif %}
+{% endblock %}

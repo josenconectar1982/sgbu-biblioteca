@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, badge %}
+{% block title %}Importar datos{% endblock %}
+{% block content %}
+<div class="ph"><div><div class="eyebrow">Migración · RF21</div><h1>Importar desde hojas de cálculo</h1><p>Carga libros desde un archivo CSV (exportado de Excel). Antes de confirmar verás una vista previa con los errores por fila.</p></div></div>
+<div class="grid g2">
+  <form method="post" enctype="multipart/form-data" class="card">
+    <h2>{{ icon('upload') }} Archivo CSV</h2>
+    <input class="in" type="file" name="archivo" accept=".csv,text/csv" style="padding-top:8px">
+    <p class="small mut">o pega el contenido (columnas: isbn; titulo; autor; editorial; anio; categoria; ejemplares):</p>
+    <textarea class="in mono" name="texto" rows="7">{{ ejemplo }}</textarea>
+    <div class="row end" style="margin-top:12px"><button class="btn">Ver vista previa</button></div>
+  </form>
+  <div class="card">
+    <h2>{{ icon('check') }} Vista previa</h2>
+    {% if preview %}
+      <div class="row" style="margin-bottom:12px">{{ badge(preview.ok|length|string + ' filas válidas','green') }} {{ badge(preview.errores|length|string + ' con errores','red') }}</div>
+      {% for r in preview.ok %}<div class="tl"><div class="dot t-green">{{ icon('check',16) }}</div><div><b>{{ r.titulo }}</b><div class="small mut">{{ r.autor }} · {{ r.isbn }} · {{ r.ejemplares or 1 }} ejemplar(es)</div></div></div>{% endfor %}
+      {% for fila, err in preview.errores %}<div class="tl"><div class="dot t-red">{{ icon('x',16) }}</div><div><b>Fila {{ fila }}</b><div class="small" style="color:#C2362B">{{ err }}</div></div></div>{% endfor %}
+      {% if preview.ok %}<form method="post" style="margin-top:14px"><input type="hidden" name="accion" value="confirmar"><button class="btn gold">Importar {{ preview.ok|length }} fila(s) válida(s)</button></form>{% endif %}
+    {% else %}<div class="empty">{{ icon('upload',30) }}<p>Sube un archivo o usa el ejemplo para ver la validación.</p></div>{% endif %}
+  </div>
+</div>
+{% endblock %}

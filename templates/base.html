@@ -1,0 +1,80 @@
+{% from "_macros.html" import icon %}<!DOCTYPE html>
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}SGBU{% endblock %} · Biblioteca Gustavo Francisco Petro Urrego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231F3A6B'/><path d='M9 8h6v16H9zM17 8h6v16h-6z' fill='%23E9C46A'/></svg>">
+</head>
+<body>
+{% block shell %}
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="brand" href="{{ url_for('inicio') }}">
+      <div class="logo">{{ icon('books', 22) }}</div>
+      <div><div class="brand-t">SGBU</div><div class="brand-s">Biblioteca G. F. Petro Urrego</div></div>
+    </a>
+    <nav>
+      {% set ep = request.endpoint %}
+      {% if es_personal %}
+        <div class="nav-h">Circulación</div>
+        <a class="{{ 'on' if ep=='panel' }}" href="{{ url_for('panel') }}">{{ icon('home') }} Panel</a>
+        <a class="{{ 'on' if ep=='mostrador' }}" href="{{ url_for('mostrador') }}">{{ icon('scan') }} Mostrador</a>
+        <a class="{{ 'on' if ep in ('catalogo','libro') }}" href="{{ url_for('catalogo') }}">{{ icon('search') }} Catálogo</a>
+        <a class="{{ 'on' if ep=='trazabilidad' }}" href="{{ url_for('trazabilidad') }}">{{ icon('history') }} Trazabilidad</a>
+        <div class="nav-h">Gestión</div>
+        <a class="{{ 'on' if ep=='usuarios' }}" href="{{ url_for('usuarios') }}">{{ icon('users') }} Usuarios</a>
+        <a class="{{ 'on' if ep=='libros' }}" href="{{ url_for('libros') }}">{{ icon('book') }} Libros y ejemplares</a>
+        <a class="{{ 'on' if ep=='sanciones' }}" href="{{ url_for('sanciones') }}">{{ icon('gavel') }} Sanciones</a>
+        <a class="{{ 'on' if ep=='reportes' }}" href="{{ url_for('reportes') }}">{{ icon('chart') }} Reportes</a>
+        <a class="{{ 'on' if ep=='notificaciones' }}" href="{{ url_for('notificaciones') }}">{{ icon('mail') }} Correos enviados</a>
+        {% if es_admin %}
+        <div class="nav-h">Administración</div>
+        <a class="{{ 'on' if ep=='politicas' }}" href="{{ url_for('politicas') }}">{{ icon('settings') }} Políticas</a>
+        <a class="{{ 'on' if ep=='auditoria' }}" href="{{ url_for('auditoria') }}">{{ icon('shield') }} Auditoría</a>
+        <a class="{{ 'on' if ep=='importar' }}" href="{{ url_for('importar') }}">{{ icon('upload') }} Importar datos</a>
+        {% endif %}
+      {% else %}
+        <div class="nav-h">Lector</div>
+        <a class="{{ 'on' if ep in ('catalogo','libro') }}" href="{{ url_for('catalogo') }}">{{ icon('search') }} Catálogo</a>
+        <a class="{{ 'on' if ep=='cuenta' }}" href="{{ url_for('cuenta') }}">{{ icon('user') }} Mi cuenta</a>
+        <a class="{{ 'on' if ep=='notificaciones' }}" href="{{ url_for('notificaciones') }}">{{ icon('bell') }} Notificaciones {% if nnoti %}<span class="pill">{{ nnoti }}</span>{% endif %}</a>
+      {% endif %}
+    </nav>
+    <div class="side-foot">
+      <div>Ingeniería de Software · UNIAJC</div>
+      <div>Proyecto final · 2026</div>
+    </div>
+  </aside>
+  <div class="main">
+    <header class="top">
+      <button class="burger" onclick="document.getElementById('side').classList.toggle('open')">{{ icon('menu') }}</button>
+      <form class="topsearch" action="{{ url_for('catalogo') }}">
+        {{ icon('search', 17) }}<input name="q" placeholder="Buscar por título, autor o ISBN…" value="{{ request.args.get('q','') if request.endpoint=='catalogo' else '' }}">
+      </form>
+      <div class="who">
+        <div class="avatar">{{ usuario.nombres[0] }}{{ usuario.apellidos[0] }}</div>
+        <div class="who-t"><b>{{ usuario.nombres }} {{ usuario.apellidos.split(' ')[0] }}</b><span>{{ usuario.tipo|capitalize }}</span></div>
+        <a class="iconbtn" href="{{ url_for('salir') }}" title="Cerrar sesión">{{ icon('logout') }}</a>
+      </div>
+    </header>
+    <main class="content">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, m in msgs %}
+        <div class="flash f-{{cat}}">{{ icon('check' if cat=='ok' else 'alert') }}<span>{{ m }}</span><button onclick="this.parentElement.remove()">{{ icon('x',15) }}</button></div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+{% endblock %}
+<script>
+document.querySelectorAll('[data-autofocus]').forEach(e=>e.focus());
+document.querySelectorAll('form[data-confirm]').forEach(f=>f.addEventListener('submit',ev=>{if(!confirm(f.dataset.confirm))ev.preventDefault();}));
+</script>
+</body>
+</html>

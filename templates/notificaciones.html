@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import icon, estado_badge %}
+{% block title %}Notificaciones{% endblock %}
+{% block content %}
+<div class="ph">
+  <div><div class="eyebrow">Notificaciones por correo · RF13</div>
+  <h1>{{ 'Mis notificaciones' if es_lector else 'Correos enviados' }}</h1>
+  <p>{% if es_lector %}Correos que el sistema te ha enviado a {{ usuario.correo }}.{% else %}Bandeja de salida del servidor SMTP institucional (simulada para la demostración).{% endif %}</p></div>
+  {% if es_personal %}
+  <form method="post" action="{{ url_for('proceso_diario') }}"><button class="btn gold">{{ icon('clock') }} Ejecutar proceso diario de las 7:00 a. m. (CU14)</button></form>
+  {% endif %}
+</div>
+{% set tipos = {'COMPROBANTE_PRESTAMO':('t-blue','check','Comprobante'),'RECORDATORIO_VENCIMIENTO':('t-amber','clock','Recordatorio'),'PRESTAMO_VENCIDO':('t-red','alert','Vencido'),'RESERVA_DISPONIBLE':('t-green','bookmark','Reserva'),'SANCION_GENERADA':('t-violet','gavel','Sanción')} %}
+<div class="card">
+  {% for n in rows %}
+  {% set t = tipos.get(n.tipo, ('t-blue','mail','Aviso')) %}
+  <div class="mail">
+    <div class="dot {{ t[0] }}">{{ icon(t[1]) }}</div>
+    <div style="flex:1;min-width:0">
+      <div class="row" style="gap:8px"><h3>{{ n.asunto }}</h3><span class="sp"></span><span class="small mut">{{ n.fecha|fecha }}</span></div>
+      <div class="small mut">Para: {{ n.correo }} · {{ n.tipo }}</div>
+      <p>{{ n.mensaje }}</p>
+    </div>
+    <div>{{ estado_badge(n.estado_envio) }}</div>
+  </div>
+  {% else %}<div class="empty">{{ icon('mail',30) }}<p>No hay notificaciones.</p></div>{% endfor %}
+</div>
+{% endblock %}
